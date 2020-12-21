@@ -1,29 +1,19 @@
+const express = require('express');
+const bodyParser = require('body-parser');
 
-var express = require("express");
+const app = express();
 
-const apiRoutes = require("./routes/apiRoutes")
-const htmlRoutes = require("./routes/htmlRoutes")
-
-
-var app = express();
-app.set('port', (process.env.PORT || 3000));
-
-app.get('/', function(request, response) {
-    var result = 'App is running'
-    response.send(result);
-}).listen(app.get('port'), function() {
-    console.log('App is running, server is listening on port ', app.get('port'));
-});
+const PORT = process.env.PORT || 5050;
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(express.static('public'))
+app.use(express.static("public"));
 
-app.use("/api", apiRoutes);
-app.use("/", htmlRoutes);
+require('./routes/apiRoutes')(app);
+require('./routes/htmlRoutes')(app);
 
-
-
-app.listen(PORT, () =>{
-    console.log(`The app is listening on port: ${PORT}`)
-})
+//Port Listener
+app.listen(PORT, () => {
+    console.log(`App listening on PORT: ${PORT}`);
+    console.log(`http://localhost:${PORT}`);
+});

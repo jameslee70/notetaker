@@ -1,32 +1,57 @@
-const store = require('../db/store')
-const router = require('express').Router();
-const db = require("../db/db.json")
+const db = require('../db/db.json');
+const fs = require('fs');
+const { uuid } = require('uuidv4');
 
-console.log(db)
 
- 
 
-router.get('/notes', (req, res) => {
-    console.log("inside API Routes")
+module.exports = (app) => {
+   
+    app.get("/api/notes", function(req, res) {
+    res.send(db);
+    });
+
+
+   
+    app.post("/api/notes", function(req, res) {
+
+        let noteId = uuid();
+        let newNote = {
+        id: noteId,
+        title: req.body.title,
+        text: req.body.text
+        };
+
+        fs.readFile("../db/db.json", "utf8", (err, data) => {
+            if (err) throw err;
+
+            const allNotes = JSON.parse(data);
+
+            allNotes.push(newNote);
+
+            fs.writeFile("./db/db.json", JSON.stringify(allNotes, null, 2), err => {
+                if (err) throw err;
+                res.send(allNotes);
+                console.log("Note created!")
+            });
+        });
+    });
+
     
-    store.getNotes()
-    .then(notes => res.json(notes))
-    .catch(err => res.status(500).json(err));
-        
-})
+    app.delete("/api/notes/:id", (req, res) => {
 
-router.post('/notes', (req, res) => {
-    let newNote = req.body;
-    console.log("this is being logged", newNote);
-    store.addNotes(newNote);
+        let noteId = req.params.id;
 
-    res.json(newNote)
-})
+        fs.readFile("./db/db.json", "utf8", (err, data) => {
+        if (err) throw err;
 
-router.delete('/notes/:id', (req, res) => {
-    store.removeNote(req.params.id)
-        .then(() => res.json({
-            ok: true
-        }))
-        .catch(err => res.status(500).json(err));
-})
+        const allNotes = JSON.parse(data);
+        const newAllNotes = allNotes.filter(note => note.id != noteId);
+
+        fs.writeFile("./db/db.json", JSON.stringify(newAllNotes, null, 2), err => {
+            if (err) throw err;
+            res.send(newAllNotes);
+            console.log("Note deleted!")
+        });
+        });
+    });
+};
